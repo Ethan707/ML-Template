@@ -1,0 +1,30 @@
+# Experiment
+model_name: TODO
+flag: train # train/debug/test
+work_dir: log/
+checkpoint: Null # Null/ checkpoint path
+save_best_model: True
+device: "0" # "cpu"
+enable_wandb: True
+
+# Dataset
+dataset: TODO
+
+# Training
+batch_size: 32
+start_epoch: 0
+epochs: 300
+lr: 0.1
+lr_decay: True
+momentum: 0.9
+weight_decay: 0.0002
+manual_seed: Null
+workers: 8
+optimizer: SGD # Adam/SGD
+scheduler: CosineAnnealingLR # Null/ StepLR/ MultiStepLR/ CosineAnnealingLR/ ReduceLROnPlateau
+num_points: 1024
+min_lr: 0.005
+print_freq: 100
+
+# Model Specification
+use_elite: False
