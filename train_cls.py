@@ -15,9 +15,9 @@ import logging
 def set_optimizer():
     # set optimizer
     if args.optimizer == "SGD":
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+        optimizer = torch.optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     elif args.optimizer == "Adam":
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        optimizer = torch.optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     return optimizer
 
 
@@ -39,17 +39,28 @@ def get_dataloader():
 
 
 def train():
+    net.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(args.device), target.to(args.device)
         optimizer.zero_grad()
-        output = model(data)
+        output = net(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
+    return {"loss": loss.item()}
 
 
 def validate():
-    pass
+    net.eval()
+    correct = 0
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(val_loader):
+            data, target = data.to(args.device), target.to(args.device)
+            output = net(data)
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    accuracy = 100. * correct / len(val_loader.dataset)
+    return {"accuracy": accuracy}
 
 
 if __name__ == "__main__":
@@ -69,9 +80,10 @@ if __name__ == "__main__":
     time = datetime.now().isoformat()[:19]
 
     model = importlib.import_module("models."+args.net)
-    model = model.Model(args)
-    model.to(args.device)
+    net = model.Model(args)
     criterion = model.Criterion()
+
+    net.to(args.device)
 
     optimizer = set_optimizer()
     schedular = set_schedular()
@@ -82,6 +94,6 @@ if __name__ == "__main__":
         train_result = train()
         val_result = validate()
         schedular.step()
-    
+
     wandb.finish()
     # os.system("shutdown -s -t 0") # work for server
